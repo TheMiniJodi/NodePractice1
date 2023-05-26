@@ -1,8 +1,9 @@
 const {MongoClient, ExplainVerbosity} = require('mongodb');
 const prompt = require('prompt-sync')({sigint: true});
+var validator = require("email-validator");
 const uri = 'mongodb://127.0.0.1:27017/';
 const client = new MongoClient(uri);
-// Add function for checking if vaild email
+// Add function for checking if vaild email - done
 // Add function for checking if correct phone number
 // Delete function user - update active status as false
 // Update function user
@@ -12,25 +13,27 @@ const client = new MongoClient(uri);
 
 
 async function listDatabases(client){
-    databases_list = await client.db().admin().listDatabases();
- 
-    console.log("Databases:");
-    databases_list.databases.forEach(db => console.log(` - ${db.name}`));
+    try{
+        databases_list = await client.db().admin().listDatabases();
+    
+        console.log("Databases:");
+        databases_list.databases.forEach(db => console.log(` - ${db.name}`));
+    }catch(e){
+        console.log("Something went wrong");
+        console.error(e);
+    }
 };
 
-function tryCat(action){
-    try{
-        action
-    }
-    catch (e){
+
+async function openDatabase(client){  
+    try{ 
+        await client.connect();
+        console.log("Database is open");
+    }catch(e){
+        console.log("Sorry could not open database....exiting program");
         console.error(e);
         process.exit(0);
     }
-}
-
-async function openDatabase(client){   
-    await client.connect();
-    console.log("Database is open");
 }
 
 function timeStamp(){
@@ -47,6 +50,7 @@ function timeStamp(){
     return date
 }
 
+
 async function insertUser(client){ 
     const database_object = client.db("Legacy");
     const collection_object = database_object.collection("users");
@@ -58,6 +62,10 @@ async function insertUser(client){
     let last_name = prompt(">>>");
     console.log("Enter email address")
     let email = prompt(">>>");
+    while (!validator.validate(email)){
+        console.log("Invalid email\n Please enter a vaild email");
+        email = prompt(">>>")
+    }
     console.log("Enter password");
     let password = prompt(">>>");
     console.log("Enter Phone Number");
@@ -79,16 +87,23 @@ async function insertUser(client){
         created_at: date, 
         updated_at: "null"
     };
-
-    
-    let result = await collection_object.insertOne(user_object);
-
-    console.log( `A document was inserted with the _id: ${result.insertedId}`);
+    try{
+        let result = await collection_object.insertOne(user_object);
+        console.log( `A document was inserted with the _id: ${result.insertedId}`);
+    }catch(e){
+        console.log("Could not add new user");
+        console.error(e);
+    }
 }
 
 async function closeDatabase(){
-    await client.close();
-    console.log("Database closed")
+    try{
+        await client.close();
+        console.log("Database closed");
+    }catch(e){
+        console.log("Could not close database");
+        console.error(e);
+    }  
 }
 
 async function main() {
@@ -108,11 +123,11 @@ async function main() {
         }
         if(choice == 'i'){
             // insert user 
-            tryCat(await insertUser(client))
+            await insertUser(client);
         }
         if(choice == 'l'){
             // list dbs
-            tryCat(await listDatabases(client))
+            await listDatabases(client);
         }
         if(choice == 'q'){
             dbopen = false;
