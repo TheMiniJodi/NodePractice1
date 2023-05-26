@@ -1,16 +1,25 @@
 const {MongoClient, ExplainVerbosity} = require('mongodb');
 const prompt = require('prompt-sync')({sigint: true});
-var validator = require("email-validator");
+const email_validator = require('email-validator');
+const {phone} = require('phone');
 const uri = 'mongodb://127.0.0.1:27017/';
 const client = new MongoClient(uri);
 // Add function for checking if vaild email - done
-// Add function for checking if correct phone number
+// Add function for checking if correct phone number -done
 // Delete function user - update active status as false
 // Update function user
 // Plans collection
 // Story collection - add, update, delete, list(report)
 
-
+function choosePlan(){
+    console.log("Please select a plan:\n b: Basic\n p: Permium");
+    let plan = prompt(">>>");
+    while(plan !== 'b' && plan !== 'p'){
+        console.log("Please enter b or p ");
+        plan = prompt(">>>");
+    }
+    return plan;
+}
 
 async function listDatabases(client){
     try{
@@ -50,27 +59,37 @@ function timeStamp(){
     return date
 }
 
-
 async function insertUser(client){ 
     const database_object = client.db("Legacy");
     const collection_object = database_object.collection("users");
     
     console.log("Inserting user");
+
     console.log("Enter first name");
     let first_name = prompt(">>>");
+
     console.log("Enter last name");
     let last_name = prompt(">>>");
+
     console.log("Enter email address")
     let email = prompt(">>>");
-    while (!validator.validate(email)){
+    while (!email_validator.validate(email)){
         console.log("Invalid email\n Please enter a vaild email");
         email = prompt(">>>")
     }
     console.log("Enter password");
     let password = prompt(">>>");
+
     console.log("Enter Phone Number");
-    let phone = prompt(">>>");
-    let date = timeStamp();
+    let phone_number = prompt(">>>");
+    while (!phone(phone_number).isValid){
+        console.log("Invaild phone number\n Please enter vaild phone number");
+        phone_number =  prompt(">>>")
+    }
+
+    const date = timeStamp();
+
+    const plan = choosePlan();
    
 
     const user_object = { 
@@ -78,10 +97,10 @@ async function insertUser(client){
         last_name: last_name,   
         email: email, 
         password: password, 
-        phone_number: phone, 
+        phone_number: phone_number, 
         avatar: "generic", 
         active: "true", 
-        plan_id: "chosen", 
+        plan_id: plan, 
         story_share_link: "generic link", 
         story_shar_link_password: "generic password", 
         created_at: date, 
