@@ -4,7 +4,7 @@ const email_validator = require('email-validator');
 const {phone} = require('phone');
 const uri = 'mongodb://127.0.0.1:27017/';
 const client = new MongoClient(uri);
-// Lets turn this project into a web app rather than a CML MVP
+// This project is a smiple node project that deals with starting a membership
 // Add function for checking if vaild email - done
 // Add function for checking if correct phone number -done
 // Delete function user - update active status as false
